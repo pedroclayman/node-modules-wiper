@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/pedroclayman/node-modules-wiper/modulesearch"
@@ -38,6 +39,11 @@ func printDirAndSize(dir string, size int64) {
 	fmt.Printf("%v:\t%v\n", dir, printSize(size))
 }
 
+func prune(dir string, size int64) {
+	os.RemoveAll(dir)
+	fmt.Printf("\"%v\" and its content has been deleted\n", dir)
+}
+
 func list(path string, largerThan int64, process func(dir string, size int64)) {
 	var dirs []string
 	modulesearch.GetNodeModuleDirectories(path, &dirs)
@@ -67,12 +73,30 @@ func getListCommand() *cobra.Command {
 	command := cobra.Command{
 		Use: "list path",
 		// Aliases: []string{"get", "get-all"},
-		Short: "Lists all paths to node_module directiries under a path",
+		Short: "Lists all paths to node_module directories under a path",
 		Args:  cobra.ExactArgs(1),
 
 		Run: func(cmd *cobra.Command, args []string) {
 			path := args[0]
 			list(path, *largerThan, printDirAndSize)
+		},
+	}
+	command.Flags().Int64Var(largerThan, "larger-than", -1, "only lists node_modules dirs larger than the value provided (in bytes)")
+	return &command
+}
+
+func getWipeCommand() *cobra.Command {
+	var largerThan *int64 = new(int64)
+
+	command := cobra.Command{
+		Use:     "prune path",
+		Aliases: []string{"clear", "remove", "delete", "wipe"},
+		Short:   "Remove all node_module directories under a path",
+		Args:    cobra.ExactArgs(1),
+
+		Run: func(cmd *cobra.Command, args []string) {
+			path := args[0]
+			list(path, *largerThan, prune)
 		},
 	}
 	command.Flags().Int64Var(largerThan, "larger-than", -1, "only lists node_modules dirs larger than the value provided (in bytes)")

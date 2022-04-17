@@ -40,4 +40,5 @@ func init() {
 	// when this action is called directly.
 
 	rootCmd.AddCommand(getListCommand())
+	rootCmd.AddCommand(getWipeCommand())
 }
